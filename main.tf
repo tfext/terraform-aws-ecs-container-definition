@@ -59,9 +59,20 @@ locals {
     logDriver = "awslogs"
     options = {
       awslogs-group         = var.aws_logging.group
-      awslogs-region        = coalesce(var.aws_logging.region, "us-west-2")
+      awslogs-region        = coalesce(var.aws_logging.region, data.aws_region.current.region)
       awslogs-stream-prefix = local.logging_name
     }
+  }
+
+  # Image reference: pinned to the tag's current digest, or the tag itself
+  image_reference = var.pin_digest ? "${local.image}@${data.docker_registry_image.image[0].sha256_digest}" : "${local.image}:${local.image_tag}"
+
+  # Secrets Manager values exposed as environment variables
+  secrets = var.secrets == null ? {} : {
+    secrets = [
+      for name, key in var.secrets.vars :
+      { name = name, valueFrom = "${var.secrets.arn}:${key}::" }
+    ]
   }
 
   container_definition = merge(
@@ -72,21 +83,19 @@ locals {
       environment       = local.container_env
       essential         = true
       logConfiguration  = local.logging
-      image = join("", [
-        local.image,
-        "@",
-        data.docker_registry_image.image.sha256_digest
-      ])
+      image             = local.image_reference
     },
     var.max_memory == null ? {} : { memory = var.max_memory },
     var.command == null ? {} : { command = var.command },
     var.entrypoint == null ? {} : { entrypoint = var.entrypoint },
     local.port_mappings,
-    local.mounts
+    local.mounts,
+    local.secrets
   )
 }
 
 # Resolve image and tag
 data "docker_registry_image" "image" {
-  name = "${local.image}:${local.image_tag}"
+  count = var.pin_digest ? 1 : 0
+  name  = "${local.image}:${local.image_tag}"
 }

@@ -24,3 +24,13 @@ output "shared_data" {
     { volume = local.shared_data_volume }
   )])[0], null)
 }
+
+output "secrets" {
+  value       = var.secrets
+  description = "The secrets input, passed through so other container definitions can reuse the mapping"
+}
+
+output "secret_arns" {
+  value       = var.secrets == null ? [] : [var.secrets.arn]
+  description = "ARNs of the secrets the definition reads, for the service's execution role"
+}
