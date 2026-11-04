@@ -26,6 +26,13 @@ variable "image_tag" {
   description = "Image tag to use (default is environment or latest)"
 }
 
+variable "pin_digest" {
+  type        = bool
+  default     = true
+  nullable    = false
+  description = "Pin the image to the tag's current digest (looked up with the Docker provider). Set false to reference the tag itself, so a moved tag is picked up by the next deployment"
+}
+
 variable "command" {
   type        = list(string)
   default     = null
@@ -113,4 +120,13 @@ variable "aws_logging" {
   })
   default     = null
   description = "Set config to use AWS CloudWatch logging instead of the default Fluent aggregation"
+}
+
+variable "secrets" {
+  type = object({
+    arn  = string
+    vars = map(string)
+  })
+  default     = null
+  description = "Secrets Manager JSON secret to expose as environment variables: arn of the secret, and vars mapping each environment variable name to its key in the secret"
 }

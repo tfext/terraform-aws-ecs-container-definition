@@ -1,7 +1,8 @@
 terraform {
   required_providers {
-    template = {
-      source = "hashicorp/template"
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.0"
     }
     docker = {
       source = "kreuzwerker/docker"
