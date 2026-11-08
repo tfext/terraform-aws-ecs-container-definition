@@ -3,6 +3,7 @@ data "aws_region" "current" {}
 locals {
   image              = join("/", var.repository == null ? [var.image] : [var.repository, var.image])
   image_tag          = coalesce(var.image_tag, terraform.workspace == "default" ? "latest" : terraform.workspace)
+  ecr                = can(regex("\\.dkr\\.ecr\\.[^.]+\\.amazonaws\\.com$", coalesce(var.repository, "-")))
   shared_data_volume = "${var.name}-sharedData"
 
   # User provided environment variables
@@ -65,7 +66,8 @@ locals {
   }
 
   # Image reference: pinned to the tag's current digest, or the tag itself
-  image_reference = var.pin_digest ? "${local.image}@${data.docker_registry_image.image[0].sha256_digest}" : "${local.image}:${local.image_tag}"
+  image_digest    = !var.pin_digest ? null : local.ecr ? data.aws_ecr_image.image[0].image_digest : data.docker_registry_image.image[0].sha256_digest
+  image_reference = var.pin_digest ? "${local.image}@${local.image_digest}" : "${local.image}:${local.image_tag}"
 
   # Secrets Manager values exposed as environment variables
   secrets = var.secrets == null ? {} : {
@@ -94,8 +96,15 @@ locals {
   )
 }
 
-# Resolve image and tag
+# Resolve image and tag: ECR repositories through the AWS provider, others
+# through the Docker provider
+data "aws_ecr_image" "image" {
+  count           = var.pin_digest && local.ecr ? 1 : 0
+  repository_name = var.image
+  image_tag       = local.image_tag
+}
+
 data "docker_registry_image" "image" {
-  count = var.pin_digest ? 1 : 0
+  count = var.pin_digest && !local.ecr ? 1 : 0
   name  = "${local.image}:${local.image_tag}"
 }

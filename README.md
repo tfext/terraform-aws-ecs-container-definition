@@ -11,7 +11,7 @@ Variables
 | `name`            | string | Y         | Service name (e.g. `my-service`)                                                                                            |
 | `image`           | string | Y         | Docker image name                                                                                                           |
 | `image_tag`       | string | N         | Docker image tag (default is current environment)                                                                           |
-| `pin_digest`      | bool   | N         | Pin the image to the tag's current digest, looked up with the Docker provider (default is true). Set false to reference the tag itself (`<repository>/<image>:<tag>`), with no lookup |
+| `pin_digest`      | bool   | N         | Pin the image to the tag's current digest (default is true), looked up with the AWS provider's `aws_ecr_image` when `repository` is an ECR registry, or the Docker provider otherwise. Set false to reference the tag itself (`<repository>/<image>:<tag>`), with no lookup |
 | `secrets`         | object | N         | Secrets Manager JSON secret to expose as environment variables (default is none). See [Secrets](#secrets)                   |
 | `aws_logging`     | object | N         | `{ group, region }`: log to CloudWatch instead of Fluentd. `region` defaults to the provider's region                        |
 | `memory_required` | number | N         | Memory capacity to reserve for scaling in MB (default is 128)                                                               |
