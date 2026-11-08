@@ -30,7 +30,7 @@ variable "pin_digest" {
   type        = bool
   default     = true
   nullable    = false
-  description = "Pin the image to the tag's current digest (looked up with the Docker provider). Set false to reference the tag itself, so a moved tag is picked up by the next deployment"
+  description = "Pin the image to the tag's current digest (looked up with the AWS provider for an ECR repository, the Docker provider otherwise). Set false to reference the tag itself, so a moved tag is picked up by the next deployment"
 }
 
 variable "command" {
